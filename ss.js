@@ -29,7 +29,7 @@ new ResizeObserver(entries => {
   }
 }).observe(document.body);
 
-const starField = new StarField({numStars: 100});
+const starField = new StarField({numStars: 1000, distance: 60});
 const sun = new Sun({texture: textures.sun})
 scene.add(starField, sun);
 

@@ -9,11 +9,11 @@ import {
   Vector3,
 } from "three";
 
-function* generateRandomPoints(n)
+function* generateRandomPoints(n, d)
 {
   for (let i = 0; i < n; i += 1)
   {
-    const radius = Math.random() * 25 + 25;
+    const radius = Math.random() * d + d;
     const u = Math.random();
     const v = Math.random();
     const theta = 2 * Math.PI * u;
@@ -26,12 +26,12 @@ function* generateRandomPoints(n)
   }
 }
 
-function createStars(numStars, texture = null)
+function createStars(numStars, texture = null, distance = 25)
 {
   const verts = [];
   const colors = [];
 
-  for (const pos of generateRandomPoints(numStars))
+  for (const pos of generateRandomPoints(numStars, distance))
   {
     const col = new Color().setHSL(Math.random(), 0.2, Math.random());
     verts.push(pos.x, pos.y, pos.z);
@@ -42,7 +42,7 @@ function createStars(numStars, texture = null)
   geo.setAttribute("position", new Float32BufferAttribute(verts, 3));
   geo.setAttribute("color", new Float32BufferAttribute(colors, 3));
   const mat = new PointsMaterial({
-    size: 0.1,
+    size: 0.125,
     alphaTest: 0.5,
     transparent: true,
     vertexColors: true,
@@ -54,10 +54,10 @@ function createStars(numStars, texture = null)
 
 export default class extends Group
 {
-  constructor({numStars = 1000, texture = null} = {})
+  constructor({numStars = 1000, texture = null, distance = 25} = {})
   {
     super();
-    this.add(createStars(numStars, texture));
+    this.add(createStars(numStars, texture, distance));
   }
 
   animate(t)
