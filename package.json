@@ -1,0 +1,14 @@
+{
+  "name": "solar-system",
+  "packageManager": "yarn@4.4.0",
+  "version": "0.0.0",
+  "author": "Nick Breen",
+  "license": "MIT",
+  "homepage": "https://nick.breen.kiwi/solar-system/",
+  "repository": "https://github.com/nickbreen/solar-system",
+  "description": "The Solar System",
+  "dependencies": {
+    "three": "^0.167.1",
+    "vite": "^5.4.2"
+  }
+}
