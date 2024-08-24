@@ -6,7 +6,7 @@ import {
   Group,
   IcosahedronGeometry,
   Mesh,
-  MeshBasicMaterial,
+  MeshBasicMaterial, MeshStandardMaterial,
   PointLight,
   ShaderMaterial,
   Vector3,
@@ -79,17 +79,22 @@ void main() {
 }
 `;
 
-class Sun extends Mesh
+class Photosphere extends Mesh
 {
   constructor(texture)
   {
     const geometry = new IcosahedronGeometry(5, 12);
     const material = new MeshBasicMaterial({
       map: texture,
-      emissive: new Color(0xffff99),
-      emissiveIntensity: 1.5,
+      // emissive: new Color(0xffff99),
+      // emissiveIntensity: 1.5,
     });
     super(geometry, material);
+  }
+
+  animate(t)
+  {
+    this.rotation.y = -t / 5;
   }
 }
 
@@ -131,7 +136,7 @@ class Corona extends NoisyMesh
   {
     const geometry = new IcosahedronGeometry(4.9, 12);
     const material = new MeshBasicMaterial({
-      color: 0xff0000,
+      color: 0xff4000,
       side: BackSide,
     });
     super(geometry, material);
@@ -197,23 +202,21 @@ class Lighting extends PointLight
   }
 }
 
-export default class extends Group
+export default class Sun extends Group
 {
   constructor({texture = null} = {})
   {
     super();
-    this.add(this.corona = new Corona())
-      .add(new Rim(vertexShaderRim, fragmentShaderRim))
-      .add(this.glow = new Glow(vertexShaderGlow, fragmentShaderGlow))
+    this.add(new Corona())
+      // .add(new Rim(vertexShaderRim, fragmentShaderRim))
+      .add(new Glow(vertexShaderGlow, fragmentShaderGlow))
       .add(new Lighting())
-      .add(new Sun(texture));
+      .add(new Photosphere(texture));
+    this.userData.isAnimate = true
   }
 
   animate(t)
   {
-    const time = t * 0.00051;
-    this.rotation.y = -time / 5;
-    this.corona.animate(time);
-    this.glow.animate(time);
+    this.children.filter(child => child.animate).forEach(child => child.animate(t * 0.00051))
   }
 }

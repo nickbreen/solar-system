@@ -7,40 +7,48 @@ const loader = new TextureLoader();
 const textures = {}
 document.querySelectorAll("link[data-texture]").forEach(link => textures[link.dataset.texture] = loader.load(link.href));
 
-const scene = new Scene();
+class SolarSystem extends Scene
+{
+  constructor()
+  {
+    super()
+      .add(new StarField({numStars: 1000, distance: 60}))
+      .add(new Sun({texture: textures.sun}));
+  }
+
+  animate(t)
+  {
+    this.children.filter(child => child.animate).forEach(child => child.animate(t))
+  }
+}
+
 const camera = new PerspectiveCamera(75, 1, 0.1, 100);
-const renderer = new WebGLRenderer();
+const canvas = document.getElementById("renderer");
+const renderer = new WebGLRenderer({canvas, antialias: true});
 const controls = new OrbitControls(camera, renderer.domElement);
-
-controls.minDistance = 10;
-controls.maxDistance = 60;
-camera.position.set(30 * Math.cos(Math.PI / 6), 30 * Math.sin(Math.PI / 6), 40);
-
-renderer.setSize(document.body.clientWidth, document.body.clientHeight);
-renderer.render(scene, camera);
 
 new ResizeObserver(entries => {
   for (let entry of entries)
   {
     const {width, height} = entry.contentRect;
-    renderer.setSize(width, height);
+    renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
-}).observe(document.body);
+}).observe(canvas);
 
-const starField = new StarField({numStars: 1000, distance: 60});
-const sun = new Sun({texture: textures.sun})
-scene.add(starField, sun);
+const scene = new SolarSystem();
 
-const animate = t => {
-  requestAnimationFrame(animate);
-  controls.update();
+renderer.setAnimationLoop(t => {
+  scene.animate(t);
   renderer.render(scene, camera);
-  starField.animate(t);
-  sun.animate(t);
-};
+  controls.update(t)
+});
 
-requestAnimationFrame(animate);
+controls.zoomToCursor = true;
+controls.enableDamping = true;
+controls.minDistance = 10;
+controls.maxDistance = 60;
 
-document.body.appendChild(renderer.domElement);
+camera.position.set(30 * Math.cos(Math.PI / 6), 30 * Math.sin(Math.PI / 6), 40);
+
