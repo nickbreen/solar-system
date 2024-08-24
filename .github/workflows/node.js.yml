@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: 20.x
           cache: 'yarn'
+      - run: corepack enable yarn
       - run: yarn
       - run: yarn vite build --base=/solar-system/
       - name: Setup Pages
