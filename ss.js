@@ -5,15 +5,16 @@ import Sun from "./sun.js";
 
 const loader = new TextureLoader();
 const textures = {}
-document.querySelectorAll("link[data-texture]").forEach(link => textures[link.dataset.texture] = loader.load(link.href));
+document.querySelectorAll('link[data-texture]')
+  .forEach(link => textures[link.dataset.texture] = loader.load(link.href));
 
 class SolarSystem extends Scene
 {
-  constructor()
+  constructor(textures)
   {
     super()
       .add(new StarField({numStars: 1000, distance: 60}))
-      .add(new Sun({texture: textures.sun}));
+      .add(new Sun(textures.sun));
   }
 
   animate(t)
@@ -38,7 +39,7 @@ new ResizeObserver(entries => {
   }
 }).observe(canvas);
 
-const scene = new SolarSystem();
+const scene = new SolarSystem(textures);
 
 renderer.setAnimationLoop(t => {
   scene.animate(t);

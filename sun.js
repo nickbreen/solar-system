@@ -13,7 +13,7 @@ import {
 } from "three";
 import {ImprovedNoise} from "three/addons/math/ImprovedNoise.js";
 
-const vertexShaderGlow = `
+const vertexShaderCorona = `
 uniform float fresnelBias;
 uniform float fresnelScale;
 uniform float fresnelPower;
@@ -34,16 +34,16 @@ void main() {
 }
 `;
 
-const fragmentShaderGlow = `
-  uniform vec3 color1;
-  uniform vec3 color2;
+const fragmentShaderCorona = `
+uniform vec3 color1;
+uniform vec3 color2;
 
-  varying float vReflectionFactor;
+varying float vReflectionFactor;
 
-  void main() {
-    float f = clamp( vReflectionFactor, 0.0, 1.0 );
-    gl_FragColor = vec4(mix(color2, color1, vec3(f)), f);
-  }
+void main() {
+  float f = clamp( vReflectionFactor, 0.0, 1.0 );
+  gl_FragColor = vec4(mix(color2, color1, vec3(f)), f);
+}
 `;
 
 class Photosphere extends Mesh
@@ -68,10 +68,10 @@ class Photosphere extends Mesh
 
 class NoisyMesh extends Mesh
 {
-  constructor(geometry, material)
+  constructor(geometry, material, noise)
   {
     super(geometry, material);
-    this.noise = new ImprovedNoise();
+    this.noise = noise;
   }
 
   animate(t)
@@ -100,24 +100,26 @@ class NoisyMesh extends Mesh
 
 class Chromosphere extends NoisyMesh
 {
-  constructor()
+  constructor(noise, {scale = 1, color, rotation = 0} = {})
   {
     const geometry = new IcosahedronGeometry(5, 12);
     const material = new MeshBasicMaterial({
-      color: 0xff4000,
+      color,
       side: BackSide,
       });
-    super(geometry, material);
+    super(geometry, material, noise);
+    this.scale.setScalar(scale)
+    this.rotation.y = rotation
   }
 }
 
 class Corona extends NoisyMesh
 {
-  constructor(vertexShader, fragmentShader)
+  constructor(noise, vertexShader, fragmentShader, {scale = 1.1, color = 0xff0000, rotation = 0} = {})
   {
     const uniforms = {
       color1: {value: new Color(0x000000)},
-      color2: {value: new Color(0xff0000)},
+      color2: {value: new Color(color)},
       fresnelBias: {value: 0.2},
       fresnelScale: {value: 1.5},
       fresnelPower: {value: 4.0},
@@ -127,39 +129,35 @@ class Corona extends NoisyMesh
       uniforms,
       vertexShader,
       fragmentShader,
-      transparent: true,
       blending: AdditiveBlending,
     });
     const geometry = new IcosahedronGeometry(5, 12);
-    super(geometry, material);
-    this.scale.setScalar(1.1)
-  }
-}
-
-class Lighting extends PointLight
-{
-  constructor()
-  {
-    super(0xffff99, 1000);
-    this.position.set(0, 0, 0);
+    super(geometry, material, noise);
+    this.scale.setScalar(scale);
+    this.rotation.y = rotation;
   }
 }
 
 export default class Sun extends Group
 {
-  constructor({texture = null} = {})
+  constructor(texture)
   {
     super();
+    const noise = new ImprovedNoise();
     this
       .add(new Photosphere(texture))
-      .add(new Chromosphere())
-      .add(new Corona(vertexShaderGlow, fragmentShaderGlow))
-      .add(new Lighting());
+      .add(new Chromosphere(noise, {color: 0xffc000, rotation: Math.random()}))
+      .add(new Chromosphere(noise, {color: 0xff8000, rotation: Math.random()}))
+      .add(new Chromosphere(noise, {color: 0xff4000, rotation: Math.random()}))
+      .add(new Corona(noise, vertexShaderCorona, fragmentShaderCorona, {scale: 1.1, color: 0xff0000, rotation: Math.random()}))
+      .add(new Corona(noise, vertexShaderCorona, fragmentShaderCorona, {scale: 1.075, color: 0xffc000, rotation: Math.random()}))
+      .add(new Corona(noise, vertexShaderCorona, fragmentShaderCorona, {scale: 1.05, color: 0xff8000, rotation: Math.random()}))
+      .add(new PointLight(0xffff99, 1000));
     this.userData.isAnimate = true
   }
 
   animate(t)
   {
-    this.children.filter(child => child.animate).forEach(child => child.animate(t * 0.00051))
+    this.children.filter(child => child.animate).forEach(child => child.animate(t * 0.0002))
   }
 }
