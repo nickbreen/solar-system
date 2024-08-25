@@ -23,6 +23,7 @@ class SolarSystem extends Scene
 }
 
 const camera = new PerspectiveCamera(75, 1, 0.1, 100);
+camera.position.set(1, 0, 0);
 const canvas = document.getElementById("renderer");
 const renderer = new WebGLRenderer({canvas, antialias: true});
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -50,5 +51,4 @@ controls.enableDamping = true;
 controls.minDistance = 10;
 controls.maxDistance = 60;
 
-camera.position.set(30 * Math.cos(Math.PI / 6), 30 * Math.sin(Math.PI / 6), 40);
 

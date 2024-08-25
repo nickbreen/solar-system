@@ -6,7 +6,7 @@ import {
   Group,
   IcosahedronGeometry,
   Mesh,
-  MeshBasicMaterial, MeshStandardMaterial,
+  MeshBasicMaterial,
   PointLight,
   ShaderMaterial,
   Vector3,
@@ -46,39 +46,6 @@ const fragmentShaderGlow = `
   }
 `;
 
-
-const vertexShaderRim = `
-uniform float fresnelBias;
-uniform float fresnelScale;
-uniform float fresnelPower;
-
-varying float vReflectionFactor;
-
-void main() {
-  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-  vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
-
-  vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );
-
-  vec3 I = worldPosition.xyz - cameraPosition;
-
-  vReflectionFactor = fresnelBias + fresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), fresnelPower );
-
-  gl_Position = projectionMatrix * mvPosition;
-}
-`;
-const fragmentShaderRim = `
-uniform vec3 color1;
-uniform vec3 color2;
-
-varying float vReflectionFactor;
-
-void main() {
-  float f = clamp( vReflectionFactor, 0.0, 1.0 );
-  gl_FragColor = vec4(mix(color2, color1, vec3(f)), f);
-}
-`;
-
 class Photosphere extends Mesh
 {
   constructor(texture)
@@ -86,6 +53,7 @@ class Photosphere extends Mesh
     const geometry = new IcosahedronGeometry(5, 12);
     const material = new MeshBasicMaterial({
       map: texture,
+      // color: 0xffff99,
       // emissive: new Color(0xffff99),
       // emissiveIntensity: 1.5,
     });
@@ -130,20 +98,20 @@ class NoisyMesh extends Mesh
   }
 }
 
-class Corona extends NoisyMesh
+class Chromosphere extends NoisyMesh
 {
   constructor()
   {
-    const geometry = new IcosahedronGeometry(4.9, 12);
+    const geometry = new IcosahedronGeometry(5, 12);
     const material = new MeshBasicMaterial({
       color: 0xff4000,
       side: BackSide,
-    });
+      });
     super(geometry, material);
   }
 }
 
-class Glow extends NoisyMesh
+class Corona extends NoisyMesh
 {
   constructor(vertexShader, fragmentShader)
   {
@@ -168,31 +136,6 @@ class Glow extends NoisyMesh
   }
 }
 
-class Rim extends Mesh
-{
-  constructor(vertexShader, fragmentShader)
-  {
-    const uniforms = {
-      color1: {value: new Color(0xffff99)},
-      color2: {value: new Color(0x000000)},
-      fresnelBias: {value: 0.2},
-      fresnelScale: {value: 1.5},
-      fresnelPower: {value: 4.0},
-    };
-
-    const material = new ShaderMaterial({
-      uniforms,
-      vertexShader,
-      fragmentShader,
-      transparent: true,
-      blending: AdditiveBlending,
-    });
-    const geometry = new IcosahedronGeometry(5, 12);
-    super(geometry, material);
-    this.scale.setScalar(1.01);
-  }
-}
-
 class Lighting extends PointLight
 {
   constructor()
@@ -207,11 +150,11 @@ export default class Sun extends Group
   constructor({texture = null} = {})
   {
     super();
-    this.add(new Corona())
-      // .add(new Rim(vertexShaderRim, fragmentShaderRim))
-      .add(new Glow(vertexShaderGlow, fragmentShaderGlow))
-      .add(new Lighting())
-      .add(new Photosphere(texture));
+    this
+      .add(new Photosphere(texture))
+      .add(new Chromosphere())
+      .add(new Corona(vertexShaderGlow, fragmentShaderGlow))
+      .add(new Lighting());
     this.userData.isAnimate = true
   }
 
