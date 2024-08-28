@@ -1,10 +1,12 @@
-import {PerspectiveCamera, Scene, TextureLoader, WebGLRenderer} from "three";
+import {PerspectiveCamera, Scene, TextureLoader, Vector3, WebGLRenderer} from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import StarField from "./starfield.js";
 import Sun from "./sun.js";
 
+import {uri} from "./noise.js";
+
 const loader = new TextureLoader();
-const textures = {}
+const textures = {noise: loader.load(uri)}
 document.querySelectorAll('link[data-texture]')
   .forEach(link => textures[link.dataset.texture] = loader.load(link.href));
 
@@ -14,7 +16,8 @@ class SolarSystem extends Scene
   {
     super()
       .add(new StarField({numStars: 1000, distance: 60}))
-      .add(new Sun(textures.sun));
+      .add(new Sun(textures.sun, {position: new Vector3(0, 0, 10)}))
+      .add(new Sun(textures.noise, {position: new Vector3(0, 0, -10)}))
   }
 
   animate(t)
@@ -51,5 +54,3 @@ controls.zoomToCursor = true;
 controls.enableDamping = true;
 controls.minDistance = 10;
 controls.maxDistance = 60;
-
-
